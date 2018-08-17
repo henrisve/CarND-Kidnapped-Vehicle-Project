@@ -69,23 +69,32 @@ void ParticleFilter::prediction(double delta_t, double std[], double velocity, d
 	}
 }
 
-std::vector<LandmarkObs> v2mCoordinate(std::vector<Particle> particles, std::vector<LandmarkObs> coordinates){
-	auto c=coordinates.begin();
-	for(auto p=particles.begin();p!=particles.end();++p,++c){
-		p->x += cos(p->theta * c->x) - sin(p->theta * c->y);
-		p->y += sin(p->theta * c->x) + cos(p->theta * c->y);
+/*std::vector<LandmarkObs> v2mCoordinate(std::vector<Particle> particles, std::vector<LandmarkObs> coordinates){
+	//auto c=coordinates.begin();
+	//for(auto p=particles.begin();p!=particles.end();++p,++c){
+	//	p->x += cos(p->theta * c->x) - sin(p->theta * c->y);
+	//	p->y += sin(p->theta * c->x) + cos(p->theta * c->y);
+	//}
+	
+	for(int i=0;i<particles.size();i++){
+		particles[i].x = cos(particles[i].theta * coordinates[i].x) - sin(particles[i].theta * coordinates[i].y);
+		particles[i].y = sin(particles[i].theta * coordinates[i].x) - cos(particles[i].theta * coordinates[i].y);
 	}
 	return coordinates;
-}
+}*/
 
 void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::vector<LandmarkObs>& observations, double sensor_range) {
 	// TODO: Find the predicted measurement that is closest to each observed measurement and assign the 
 	//   observed measurement to this particular landmark.
 	// NOTE: this method will NOT be called by the grading code. But you will probably find it useful to 
 	//   implement this method and use it as a helper during the updateWeights phase.
-	std::vector<LandmarkObs> best_locations;
-	for (auto &observed_location : observations){
-		double min_distance = INFINITY;
+	std::vector<LandmarkObs> best_locations[observations.size()];
+	for(auto &bl:best_locations) bl.id=-1; //Set all id to -1 so we can identify non-location
+
+	for(int i=0; i < observations.size(); i++){
+		auto observed_location = observations[i]
+	//for (auto &observed_location : observations){
+		double min_distance = sensor_range;//INFINITY;
 		LandmarkObs best_location;
 		int i=0;
 		for (auto &predicted_location : predicted){
@@ -96,7 +105,7 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 				best_location = predicted_location;
 			}
 		}
-		best_locations.push_back(best_location);
+		best_locations[i]=(best_location);
 	}
 }
 
@@ -112,7 +121,21 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	//   and the following is a good resource for the actual equation to implement (look at equation 
 	//   3.33
 	//   http://planning.cs.uiuc.edu/node99.html
+	
+	for(auto &p : particles){
+		//std::vector<LandmarkObs> trueObservation;
+		for auto &o : observations){
+			LandmarkObs trueObservation;
+			trueObservation.x = p.x + cos(p->theta * c.x) - sin(p.theta * c.y);
+			trueObservation.y = p.y + sin(p->theta * c.x) + cos(p.theta * c.y);
+			dataAssociation(,,sensor_range)
+			weights[] *= exp(-1/2 * ())
+		}
+	}
+
+	
 	/*map_landmarks.landmark_list[1].x_f
+
 	convert to map_landmarks
 	do dataAssociation
 	if not none
