@@ -38,7 +38,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 		new_particle.theta = norm_theta(generator);
 		new_particle.weight =1;
 		particles.push_back(new_particle);
-		weights.push_back(1);//but why again?
+		weights.push_back(1);
 	}
 
 	is_initialized = true;
@@ -61,14 +61,16 @@ void ParticleFilter::prediction(double delta_t, double std[], double velocity, d
 			p.theta +=  delta_yaw + norm_theta(generator);
 			p.x += cos(p.theta)*delta_pos + norm_x(generator);
 			p.y += sin(p.theta)*delta_pos + norm_y(generator);
+
 		}else{
-			double t0 = p.theta ;
-			p.theta += delta_yaw + norm_theta(generator);
-			p.x += velocity/yaw_rate * (sin(p.theta) - sin(t0))+ norm_theta(generator); //Here p.theta already have the nosie, how does this affect it? better to add after?
-			p.y += velocity/yaw_rate * (cos(t0) - cos(p.theta))+ norm_theta(generator);
+			double t0 = p.theta;
+			p.theta += delta_yaw;
+			p.x += velocity/yaw_rate * (sin(p.theta) - sin(t0)) + norm_x(generator); //Here p.theta already have the nosie, how does this affect it? better to add after?
+			p.y += velocity/yaw_rate * (cos(t0) - cos(p.theta)) + norm_y(generator);
+			p.theta += norm_theta(generator);
+			
 		}	
-	}
-	
+	}	
 }
 
 best_location ParticleFilter::dataAssociation(LandmarkObs observed_location, double sensor_range, double std_landmark[], const Map &map_landmarks) {
@@ -89,14 +91,13 @@ best_location ParticleFilter::dataAssociation(LandmarkObs observed_location, dou
 	for (auto &map_location : map_landmarks.landmark_list){
 		double xdiff = map_location.x_f - observed_location.x;
 		double ydiff = map_location.y_f - observed_location.y;
-		double sq_diff = pow(xdiff, 2) / 2*pow(std_landmark[0], 2) +
-		              pow(ydiff, 2) / 2*pow(std_landmark[1], 2);
 		double diff = sqrt(xdiff*xdiff + ydiff*ydiff);
 		if(diff < min_distance){
-			min_distance=diff;
+			min_distance=diff;		
 			best_location.id = map_location.id_i;
-			best_location.distance = sq_diff; // Use square diff to reduce computations
-			cout << "new best" << best_location.id << " . " << best_location.distance << " (" << diff << ")"<< endl;
+			best_location.distance_x = xdiff;
+			best_location.distance_y = ydiff;
+			//cout << "new best" << best_location.id << " . " << best_location.distance << " (" << diff << ")"<< endl;
 		}
 		
 	}
@@ -124,22 +125,23 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 		vector<double> sense_x;
 		vector<double> sense_y;
 		p.weight = 1;
-		cout << "init weight for p" << p.id << " = " << p.weight << endl;
+		//cout << "init weight for p" << p.id << " = " << p.weight << endl;
 		for(auto &o : observations){
 			LandmarkObs trueObservation;
 			trueObservation.x = p.x + cos(p.theta) * o.x - sin(p.theta) * o.y;
 			trueObservation.y = p.y + sin(p.theta) * o.x + cos(p.theta) * o.y;
 			best_location best_locations = dataAssociation(trueObservation,sensor_range,std_landmark,map_landmarks);
 			if(best_locations.id != -1){
-
-				long double vm = 1/(2 * M_1_PI * std_landmark[0]*std_landmark[1]) * exp(-best_locations.distance);
-				cout << "vm " << vm << " __ " <<  1/(2 * M_1_PI * std_landmark[0]*std_landmark[1]) << " * " <<  exp(-best_locations.distance) << endl;
+				double sq_diff = pow(best_locations.distance_x, 2) / 2*pow(std_landmark[0], 2) +
+		        				 pow(best_locations.distance_y, 2) / 2*pow(std_landmark[1], 2); 
+				long double vm = 1/(2 * M_1_PI * std_landmark[0]*std_landmark[1]) * exp(-sq_diff);
+				//cout << "vm " << vm << " __ " <<  1/(2 * M_1_PI * std_landmark[0]*std_landmark[1]) << " * " <<  exp(-best_locations.distance) << endl;
 				p.weight *= vm;
 			}
 			associations.push_back(best_locations.id);
 			sense_x.push_back(trueObservation.x);
 			sense_y.push_back(trueObservation.y);
-			cout << "weight for p" << p.id << " o" << o.id << " = " << p.weight << endl;		
+			//cout << "weight for p" << p.id << " o" << o.id << " = " << p.weight << endl;		
 		}	
 		p.associations=associations;
 		p.sense_x=sense_x;
@@ -149,7 +151,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	for(auto &p : particles){	
 		p.weight = p.weight/total_weight;
 		weights[i++]=p.weight;
-		cout << "after weight for p" << p.id << " = " << p.weight << endl;
+		//cout << "after weight for p" << p.id << " = " << p.weight << endl;
 
 		//SetAssociations(p,associations,sense_x,sense_y);
 	}

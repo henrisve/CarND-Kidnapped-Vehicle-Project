@@ -26,7 +26,8 @@ struct Particle {
 
 struct best_location {
 	int id;
-	double distance;
+	double distance_x;
+	double distance_y;
 };
 
 class ParticleFilter {
