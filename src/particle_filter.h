@@ -24,6 +24,10 @@ struct Particle {
 };
 
 
+struct best_location {
+	int id;
+	double distance;
+};
 
 class ParticleFilter {
 	
@@ -49,6 +53,7 @@ public:
 
 	// Destructor
 	~ParticleFilter() {}
+
 
 	/**
 	 * init Initializes particle filter by initializing particles to Gaussian
@@ -78,7 +83,8 @@ public:
 	 * @param predicted Vector of predicted landmark observations
 	 * @param observations Vector of landmark observations
 	 */
-	void dataAssociation(std::vector<LandmarkObs> predicted, std::vector<LandmarkObs>& observations);
+	
+	best_location dataAssociation(LandmarkObs observed_location, double sensor_range,double std_landmark[], const Map &map_landmarks);
 	
 	/**
 	 * updateWeights Updates the weights for each particle based on the likelihood of the 
