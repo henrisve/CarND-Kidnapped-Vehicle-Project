@@ -18,13 +18,14 @@
 #include "particle_filter.h"
 
 using namespace std;
+std::default_random_engine generator;
 
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	// TODO: Set the number of particles. Initialize all particles to first position (based on estimates of 
 	//   x, y, theta and their uncertainties from GPS) and all weights to 1. 
 	// Add random Gaussian noise to each particle.
 	// NOTE: Consult particle_filter.h for more information about this method (and others in this file).
-	std::default_random_engine generator;
+
 	normal_distribution<double> norm_x(x, std[0]);
 	normal_distribution<double> norm_y(y, std[1]);
 	normal_distribution<double> norm_theta(theta, std[2]);
@@ -50,14 +51,14 @@ void ParticleFilter::prediction(double delta_t, double std[], double velocity, d
 	//  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
 	//  http://www.cplusplus.com/reference/random/default_random_engine/
 	
-	std::default_random_engine generator;
+
 	double delta_pos = velocity * delta_t;
 	double delta_yaw = yaw_rate * delta_t;		
 	normal_distribution<double> norm_x(0, std[0]);
 	normal_distribution<double> norm_y(0, std[1]);
 	normal_distribution<double> norm_theta(0, std[2]);
 	for (auto &p : particles){
-		if(yaw_rate==0){
+		if(yaw_rate<0.00001){
 			p.theta +=  delta_yaw + norm_theta(generator);
 			p.x += cos(p.theta)*delta_pos + norm_x(generator);
 			p.y += sin(p.theta)*delta_pos + norm_y(generator);
@@ -162,13 +163,13 @@ void ParticleFilter::resample() {
 	// TODO: Resample particles with replacement with probability proportional to their weight. 
 	// NOTE: You may find std::discrete_distribution helpful here.
 	//   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
-	default_random_engine gen;
+
 	discrete_distribution<int> distribution(weights.begin(), weights.end());
 
 	vector<Particle> resamples;
 	for(int i=0;i<num_particles;i++) 
 		//Particle new_p = ;
-		resamples.push_back(particles[distribution(gen)]);
+		resamples.push_back(particles[distribution(generator)]);
 	particles=resamples;
 
 }
