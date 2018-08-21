@@ -58,7 +58,7 @@ void ParticleFilter::prediction(double delta_t, double std[], double velocity, d
 	normal_distribution<double> norm_y(0, std[1]);
 	normal_distribution<double> norm_theta(0, std[2]);
 	for (auto &p : particles){
-		if(yaw_rate<0.00001){
+		if(fabs(yaw_rate)<0.00001){
 			p.theta +=  delta_yaw + norm_theta(generator);
 			p.x += cos(p.theta)*delta_pos + norm_x(generator);
 			p.y += sin(p.theta)*delta_pos + norm_y(generator);
